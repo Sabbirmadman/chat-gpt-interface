@@ -21,13 +21,13 @@ export default function ChatWindow({
     return (
         <div className="max-w-4xl mx-auto w-full pt-12">
             {conversations.map((conv, index) => (
-                <div key={index} className="mb-12 gap-4 flex flex-col">
-                    <div className="flex items-start space-x-3 mb-1 self-start">
+                <div key={index} className="mb-12 gap-4 flex flex-col m-2">
+                    <div className="flex items-start space-x-3  self-start">
                         <div className="flex-shrink-0">
                             <CiUser className="w-8 h-8 text-white bg-blue-500 p-1.5 rounded-full" />
                         </div>
 
-                        <div className="bg-primary p-3 rounded-lg text-gray-800 font-medium">
+                        <div className="bg-primary p-4 rounded-lg text-gray-800 font-medium ">
                             {conv.user.files.map((file, index) => (
                                 <div
                                     key={index}
@@ -42,7 +42,7 @@ export default function ChatWindow({
                                     </div>
                                 </div>
                             ))}
-                            {conv.user.prompt}
+                            <p className="break-all"> {conv.user.prompt}</p>
                             <p className="text-xs text-gray-500">
                                 {new Date(
                                     conv.user.creationDateTime
@@ -51,7 +51,7 @@ export default function ChatWindow({
                         </div>
                     </div>
                     <div className="flex items-start space-x-3 mb-1 self-end">
-                        <div className="bg-primary shadow-md p-3 rounded-lg font-medium">
+                        <div className="bg-primary shadow-md p-4 rounded-lg font-medium">
                             {conv.bot}
                         </div>
                         <div className="flex-shrink-0">

@@ -45,6 +45,12 @@ export default function ChatInputWindow({
             onSend(data);
             setInput("");
             setFiles([]);
+
+            // Reset textarea height
+            const textarea = document.querySelector("textarea");
+            if (textarea) {
+                textarea.style.height = "46px";
+            }
         }
     };
 
@@ -99,24 +105,32 @@ export default function ChatInputWindow({
                 {/* Input Area */}
                 <div {...getRootProps()} className="relative">
                     <div className="flex items-center space-x-2">
-                        <input
-                            className="flex-1 p-3 border rounded-lg bg-primary focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
-                            type="text"
+                        <textarea
+                            className="flex-1 p-3 border rounded-lg bg-primary focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm min-h-[46px] max-h-[200px] overflow-y-auto resize-none leading-6 no-scrollbar"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             placeholder="Type a message..."
                             onKeyPress={handleKeyPress}
+                            rows={1}
+                            onInput={(e) => {
+                                const target = e.target as HTMLTextAreaElement;
+                                target.style.height = "46px";
+                                target.style.height = `${Math.min(
+                                    target.scrollHeight,
+                                    200
+                                )}px`;
+                            }}
                         />
                         <button
                             onClick={handleSend}
-                            className="bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-600 transition-colors font-medium shadow-sm flex items-center space-x-2"
+                            className="bg-blue-500 text-white px-4 h-[46px] rounded-lg hover:bg-blue-600 transition-colors font-medium shadow-sm flex items-center space-x-2"
                         >
                             <AiOutlineSend className="w-5 h-5" />
                             <span>Send</span>
                         </button>
                         <label
                             htmlFor="file-upload"
-                            className="bg-gray-100 px-4 py-3 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors text-gray-700 font-medium shadow-sm flex items-center space-x-2"
+                            className="bg-gray-100 px-4 h-[46px] rounded-lg cursor-pointer hover:bg-gray-200 transition-colors text-gray-700 font-medium shadow-sm flex items-center space-x-2"
                         >
                             <AiOutlineCloudUpload className="w-5 h-5" />
                             <span>Upload</span>

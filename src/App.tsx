@@ -1,4 +1,3 @@
-import "./App.css";
 import AboutPage from "./pages/AboutPage";
 import ChatPage from "./pages/ChatPage";
 import HomePage from "./pages/HomePage";
