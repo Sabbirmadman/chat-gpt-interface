@@ -23,7 +23,7 @@ export default function ChatPage() {
     };
 
     return (
-        <div className="h-screen bg-custom-gradient bg-cover bg-fixed bg-no-repeat p-2">
+        <div className="h-screen  bg-primary ">
             <SlidingPane
                 isOpen={state.isPaneOpen}
                 from="left"
@@ -32,9 +32,9 @@ export default function ChatPage() {
                 className="bg-custom-gradient text-textLight bg-cover bg-fixed bg-no-repeat"
                 hideHeader
             >
-                <div>And I am pane content. BTW, what rocks?</div>
+                <div>Chat Pane</div>
             </SlidingPane>
-            <div className="h-full bg-white rounded-lg flex flex-col ">
+            <div className="h-full bg-primary text-textPrimary rounded-lg flex flex-col overflow-hidden">
                 <ChatHeader setState={setState} />
                 <div className="flex-1 bg-secondary mx-8 rounded-md overflow-y-auto">
                     <ChatWindow conversations={conversations} />

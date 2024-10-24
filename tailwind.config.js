@@ -4,13 +4,13 @@ export default {
     theme: {
         extend: {
             colors: {
-                primary: "#fdfdfd",
-                secondary: "#f4f5f7",
-                gray: "#ecf0f2",
-                primaryDark: "#131718",
-                textPrimary: "#333",
-                textSecondary: "#777",
-                textLight: "#f4f5f7",
+                primary: "var(--color-primary)",
+                secondary: "var(--color-secondary)",
+                gray: "var(--color-gray)",
+                primaryDark: "var(--color-primary-dark)",
+                textPrimary: "var(--color-text-primary)",
+                textSecondary: "var(--color-text-secondary)",
+                textLight: "var(--color-text-light)",
             },
             backgroundImage: {
                 "custom-gradient":

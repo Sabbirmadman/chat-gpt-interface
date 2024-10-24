@@ -66,7 +66,7 @@ export default function ChatInputWindow({
     };
 
     return (
-        <div className="w-full bg-white p-4">
+        <div className="w-full bg-primary text-textPrimary p-4">
             <div className="max-w-4xl mx-auto w-full">
                 {/* File Preview Area */}
                 {files.length > 0 && (
@@ -100,7 +100,7 @@ export default function ChatInputWindow({
                 <div {...getRootProps()} className="relative">
                     <div className="flex items-center space-x-2">
                         <input
-                            className="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
+                            className="flex-1 p-3 border rounded-lg bg-primary focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
                             type="text"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}

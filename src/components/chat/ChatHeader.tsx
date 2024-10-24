@@ -8,7 +8,7 @@ export default function ChatHeader({
     title?: string;
 }) {
     return (
-        <div className="p-4 flex justify-between items-center  w-full bg-primary ">
+        <div className="p-4 flex justify-between items-center  w-full bg-primary text-textPrimary ">
             <span className="flex items-center gap-2">
                 <button onClick={() => setState({ isPaneOpen: true })}>
                     <CiSquareChevLeft className="text-2xl cursor-pointer" />
