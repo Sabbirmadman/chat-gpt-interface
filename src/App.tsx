@@ -4,7 +4,7 @@ import HomePage from "./pages/HomePage";
 import { Routes, Route } from "react-router-dom";
 
 function App() {
-    document.documentElement.classList.add("light");
+    document.documentElement.classList.add("dark");
     return (
         <div>
             <Routes>

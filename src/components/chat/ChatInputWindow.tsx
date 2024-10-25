@@ -6,26 +6,27 @@ import {
     AiOutlineClose,
 } from "react-icons/ai";
 
-import { FilePreview } from "../../globalTypes";
+import { Conversation, FilePreview, UserInput } from "../../globalTypes";
 import FileIcon from "../FileIcon";
+import { MdOutlineAttachFile } from "react-icons/md";
 
 export default function ChatInputWindow({
     onSend,
+    disabled,
 }: {
-    onSend: (data: {
-        files: FilePreview[];
-        prompt: string;
-        creationDateTime: string;
-    }) => void;
+    onSend: (data: UserInput) => Promise<Conversation>;
+    disabled: boolean;
 }) {
     const [input, setInput] = useState("");
     const [files, setFiles] = useState<FilePreview[]>([]);
+    const [sending, setSending] = useState(false);
 
     const onDrop = useCallback((acceptedFiles: File[]) => {
         const newFiles = acceptedFiles.map((file) => ({
             name: file.name,
             size: file.size,
             type: file.type,
+            lastModified: file.lastModified,
         }));
         setFiles((prev) => [...prev, ...newFiles]);
     }, []);
@@ -35,21 +36,28 @@ export default function ChatInputWindow({
         noClick: true,
     });
 
-    const handleSend = () => {
-        if (input || files.length > 0) {
+    const handleSend = async () => {
+        if (input.trim() || files.length > 0) {
             const data = {
                 files,
                 prompt: input,
                 creationDateTime: new Date().toISOString(),
             };
-            onSend(data);
-            setInput("");
-            setFiles([]);
 
-            // Reset textarea height
-            const textarea = document.querySelector("textarea");
-            if (textarea) {
-                textarea.style.height = "46px";
+            setSending(true);
+            try {
+                await onSend(data);
+                setInput("");
+                setFiles([]);
+                // Reset textarea height
+                const textarea = document.querySelector("textarea");
+                if (textarea) {
+                    textarea.style.height = "46px";
+                }
+            } catch (error) {
+                console.error("Failed to send message:", error);
+            } finally {
+                setSending(false);
             }
         }
     };
@@ -80,7 +88,7 @@ export default function ChatInputWindow({
                         {files.map((file, index) => (
                             <div
                                 key={index}
-                                className="flex items-center bg-gray-100 rounded-lg p-2 pr-3 space-x-2 group hover:bg-gray-200 transition-colors"
+                                className="flex items-center bg-gray-100 rounded-lg p-2 pr-3 space-x-2 group hover:bg-gray-200 transition-colors border border-dashed border-gray-300"
                             >
                                 <FileIcon fileType={file.type} />
                                 <div className="flex flex-col">
@@ -104,14 +112,27 @@ export default function ChatInputWindow({
 
                 {/* Input Area */}
                 <div {...getRootProps()} className="relative">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-end space-x-2 border border-transparent focus-within:border-appBlue rounded-lg p-1">
+                        <label
+                            htmlFor="file-upload"
+                            className="hover:text-textPrimary hover:bg-appBlue px-4 h-[46px] rounded-lg cursor-pointer hover:bg-gray-200 transition-colors text-gray-700 font-medium  flex items-center space-x-2"
+                        >
+                            <MdOutlineAttachFile className="w-5 h-5" />
+                            <input
+                                {...getInputProps()}
+                                id="file-upload"
+                                className="hidden"
+                                multiple
+                            />
+                        </label>
                         <textarea
-                            className="flex-1 p-3 border rounded-lg bg-primary focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm min-h-[46px] max-h-[200px] overflow-y-auto resize-none leading-6 no-scrollbar"
+                            className="flex-1 text-textSecondary p-3 rounded-lg bg-primary outline-none min-h-[46px] max-h-[200px] overflow-y-auto resize-none leading-6 no-scrollbar"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             placeholder="Type a message..."
                             onKeyPress={handleKeyPress}
                             rows={1}
+                            disabled={sending || disabled}
                             onInput={(e) => {
                                 const target = e.target as HTMLTextAreaElement;
                                 target.style.height = "46px";
@@ -123,28 +144,20 @@ export default function ChatInputWindow({
                         />
                         <button
                             onClick={handleSend}
-                            className="bg-blue-500 text-white px-4 h-[46px] rounded-lg hover:bg-blue-600 transition-colors font-medium shadow-sm flex items-center space-x-2"
+                            className="text-textPrimary px-4 h-[46px] rounded-lg hover:bg-appBlue transition-colors font-medium flex items-center space-x-2"
+                            disabled={
+                                sending ||
+                                disabled ||
+                                (!input.trim() && files.length === 0)
+                            }
                         >
                             <AiOutlineSend className="w-5 h-5" />
-                            <span>Send</span>
+                            <span>{sending ? "Sending..." : "Send"}</span>
                         </button>
-                        <label
-                            htmlFor="file-upload"
-                            className="bg-gray-100 px-4 h-[46px] rounded-lg cursor-pointer hover:bg-gray-200 transition-colors text-gray-700 font-medium shadow-sm flex items-center space-x-2"
-                        >
-                            <AiOutlineCloudUpload className="w-5 h-5" />
-                            <span>Upload</span>
-                            <input
-                                {...getInputProps()}
-                                id="file-upload"
-                                className="hidden"
-                                multiple
-                            />
-                        </label>
                     </div>
                     {isDragActive && (
-                        <div className="absolute inset-0 bg-blue-50 bg-opacity-50 rounded-lg border-2 border-blue-500 border-dashed flex items-center justify-center">
-                            <div className="flex items-center space-x-2 text-blue-500">
+                        <div className="absolute inset-0 bg-blue-50 bg-opacity-50 rounded-lg border-2 border-appBlue border-dashed flex items-center justify-center">
+                            <div className="flex items-center space-x-2 text-appBlue">
                                 <AiOutlineCloudUpload className="w-6 h-6" />
                                 <span className="font-medium">
                                     Drop files here

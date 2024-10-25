@@ -1,0 +1,4 @@
+mkdir public
+touch public/mockServiceWorker.js
+
+npx msw init public/ --save

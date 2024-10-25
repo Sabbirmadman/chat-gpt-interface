@@ -11,6 +11,8 @@ export default {
                 textPrimary: "var(--color-text-primary)",
                 textSecondary: "var(--color-text-secondary)",
                 textLight: "var(--color-text-light)",
+
+                appBlue: "var(--appBlue)",
             },
             backgroundImage: {
                 "custom-gradient":
