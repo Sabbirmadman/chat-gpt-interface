@@ -9,22 +9,20 @@ export interface FilePreview {
 
 // User input structure that contains prompt and files
 export interface UserInput {
-    files: FilePreview[];
     prompt: string;
     creationDateTime: string;
 }
 
-// Bot's response to user input, including files or text response
+// Bot's response to user input, including files or the incrementally typed text response
 export interface BotResponse {
     files?: FilePreview[];
-    botResponse: string;
+    botResponseChunks: string[]; // Updated to hold typed chunks in sequence
     creationDateTime: string;
 }
 
 // Represents a single conversation exchange between user and bot
 export interface Conversation {
-    id?: string;
-    user: UserInput;
-    bot: BotResponse;
-    status?: "pending" | "completed" | "failed";
+    text?: string;
+    botResponseChunks: string[]; // For capturing the incremental response in real-time
+    isTyping: boolean; // To indicate if the typing simulation is in progress
 }

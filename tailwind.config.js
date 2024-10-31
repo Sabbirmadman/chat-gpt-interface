@@ -4,15 +4,33 @@ export default {
     theme: {
         extend: {
             colors: {
-                primary: "var(--color-primary)",
-                secondary: "var(--color-secondary)",
-                gray: "var(--color-gray)",
-                primaryDark: "var(--color-primary-dark)",
-                textPrimary: "var(--color-text-primary)",
-                textSecondary: "var(--color-text-secondary)",
-                textLight: "var(--color-text-light)",
-
-                appBlue: "var(--appBlue)",
+                primary: {
+                    light: "#fdfdfd",
+                    dark: "#131718",
+                },
+                secondary: {
+                    light: "#f4f5f7",
+                    dark: "#283444",
+                },
+                gray: {
+                    light: "#f4f5f7",
+                    dark: "#201b22",
+                },
+                text: {
+                    primary: {
+                        light: "#131718",
+                        dark: "#f4f5f7",
+                    },
+                    secondary: {
+                        light: "#777777",
+                        dark: "#cccccc",
+                    },
+                    light: {
+                        light: "#cccccc",
+                        dark: "#777777",
+                    },
+                },
+                appBlue: "#3b82f6",
             },
             backgroundImage: {
                 "custom-gradient":
@@ -20,5 +38,6 @@ export default {
             },
         },
     },
+    darkMode: "class",
     plugins: [],
 };

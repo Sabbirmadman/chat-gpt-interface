@@ -1,148 +1,159 @@
-import { useEffect, useState } from "react";
-import SlidingPane from "react-sliding-pane";
-import "react-sliding-pane/dist/react-sliding-pane.css";
-import ChatHeader from "../components/chat/ChatHeader";
-import ChatWindow from "../components/chat/ChatWindow";
-import ChatInputWindow from "../components/chat/ChatInputWindow";
-import { Conversation, UserInput, FilePreview } from "../globalTypes";
-import { conversationService, fileService } from "../api";
+import React, { useState, useEffect, useRef } from "react";
+import { useTheme } from "../ThemeProvider";
+import { BiMoon, BiSend, BiSun } from "react-icons/bi";
 
-export default function ChatPage() {
-    const [state, setState] = useState({
-        isPaneOpen: false,
-    });
-    const [conversations, setConversations] = useState<Conversation[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+interface Message {
+    sender: "user" | "bot";
+    text: string;
+}
 
-    // Fetch all conversations
-    const fetchConversations = async () => {
+const ChatPage = () => {
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [inputText, setInputText] = useState<string>("");
+    const [isTyping, setIsTyping] = useState<boolean>(false);
+    const chatEndRef = useRef<HTMLDivElement>(null);
+    const { theme, toggleTheme } = useTheme();
+
+    const sendMessage = async () => {
+        if (!inputText.trim()) return;
+
+        const userMessage: Message = { sender: "user", text: inputText };
+        setMessages((prevMessages) => [...prevMessages, userMessage]);
+        setInputText("");
+        setIsTyping(true);
+
         try {
-            setLoading(true);
-            setError(null);
-            const fetchedConversations =
-                await conversationService.getConversations();
-            setConversations(fetchedConversations);
-        } catch (err) {
-            setError("Failed to load conversations");
-            console.error("Error fetching conversations:", err);
-        } finally {
-            setLoading(false);
+            setMessages((prevMessages) => [
+                ...prevMessages,
+                { sender: "bot", text: "" },
+            ]);
+
+            const eventSource = new EventSource(
+                `http://localhost:9292/api/v1/generate?promptMessage=${encodeURIComponent(
+                    inputText
+                )}`
+            );
+
+            eventSource.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                setMessages((prevMessages) => {
+                    const newMessages = [...prevMessages];
+                    const lastMessage = newMessages[newMessages.length - 1];
+                    if (lastMessage.sender === "bot") {
+                        lastMessage.text += data.text;
+                    }
+                    return newMessages;
+                });
+            };
+
+            eventSource.onerror = () => {
+                eventSource.close();
+                setIsTyping(false);
+            };
+
+            return () => {
+                eventSource.close();
+            };
+        } catch (error) {
+            console.error("Error fetching response from server:", error);
+            setMessages((prevMessages) => [
+                ...prevMessages,
+                { sender: "bot", text: "Error: could not fetch response." },
+            ]);
+            setIsTyping(false);
         }
     };
 
     useEffect(() => {
-        fetchConversations();
-    }, []);
-
-    // Handle file uploads
-    const handleFileUpload = async (files: File[]): Promise<FilePreview[]> => {
-        try {
-            setLoading(true);
-            setError(null);
-
-            // Upload multiple files if available
-            if (files.length > 1) {
-                return await fileService.uploadFiles(files);
-            }
-
-            // Upload single file
-            if (files.length === 1) {
-                const uploadedFile = await fileService.uploadFile(files[0]);
-                return [uploadedFile];
-            }
-
-            return [];
-        } catch (err) {
-            setError("Failed to upload files");
-            console.error("Error uploading files:", err);
-            return [];
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Handle sending messages
-    const handleSend = async (data: UserInput) => {
-        try {
-            setLoading(true);
-            setError(null);
-
-            // Upload any files first
-            let uploadedFiles: FilePreview[] = [];
-            if (data.files.length > 0) {
-                const filesToUpload = data.files.filter(
-                    (file) => file instanceof File
-                ) as File[];
-                uploadedFiles = await handleFileUpload(filesToUpload);
-            }
-
-            // Create conversation with uploaded files
-            const newConversation =
-                await conversationService.createConversation({
-                    ...data,
-                    files: uploadedFiles,
-                });
-
-            // Update conversations list
-            setConversations((prev) => [newConversation, ...prev]);
-
-            return newConversation;
-        } catch (err) {
-            setError("Failed to send message");
-            console.error("Error sending message:", err);
-
-            // Add error handling UI feedback here if needed
-            throw err;
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Handle retrying failed requests
-    const handleRetry = () => {
-        setError(null);
-        fetchConversations();
-    };
+        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages]);
 
     return (
-        <div className="h-screen bg-primary">
-            <SlidingPane
-                isOpen={state.isPaneOpen}
-                from="left"
-                onRequestClose={() => setState({ isPaneOpen: false })}
-                width="300px"
-                className="bg-custom-gradient text-textLight bg-cover bg-fixed bg-no-repeat"
-                hideHeader
-            >
-                <div>Chat Pane</div>
-            </SlidingPane>
-            <div className="h-full bg-primary text-textPrimary rounded-lg flex flex-col overflow-hidden">
-                <ChatHeader setState={setState} />
-                <div className="flex-1 bg-secondary mx-2 rounded-md overflow-y-auto bg-custom-gradient border-2 border-gray relative">
-                    {loading && (
-                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-                        </div>
-                    )}
-
-                    {error && (
-                        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-md flex items-center space-x-2">
-                            <span>{error}</span>
-                            <button
-                                onClick={handleRetry}
-                                className="text-sm underline hover:no-underline"
-                            >
-                                Retry
-                            </button>
-                        </div>
-                    )}
-
-                    <ChatWindow conversations={conversations} />
+        <div className="flex flex-col items-center justify-center min-h-screen bg-primary-light dark:bg-primary-dark">
+            <div className="w-full max-w-4xl bg-secondary-light dark:bg-secondary-dark rounded-lg shadow-lg overflow-hidden flex flex-col h-[80vh]">
+                {/* Chat Header */}
+                <div className="bg-gray-light dark:bg-gray-dark border-b border-text-light-light dark:border-text-light-dark px-6 py-4 flex justify-between items-center">
+                    <div>
+                        <h2 className="text-lg font-semibold text-text-primary-light dark:text-text-primary-dark">
+                            Chat Assistant
+                        </h2>
+                        <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                            Ask me anything
+                        </p>
+                    </div>
+                    <button
+                        onClick={toggleTheme}
+                        className="p-2 rounded-full hover:bg-primary-light dark:hover:bg-primary-dark transition-colors"
+                    >
+                        {theme === "dark" ? (
+                            <BiSun className="w-5 h-5 text-text-primary-dark" />
+                        ) : (
+                            <BiMoon className="w-5 h-5 text-text-primary-light" />
+                        )}
+                    </button>
                 </div>
 
-                <ChatInputWindow onSend={handleSend} disabled={loading} />
+                {/* Messages Container */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-secondary-light dark:bg-secondary-dark">
+                    {messages.map((message, index) => (
+                        <div
+                            key={index}
+                            className={`flex ${
+                                message.sender === "user"
+                                    ? "justify-end"
+                                    : "justify-start"
+                            }`}
+                        >
+                            <div
+                                className={`max-w-[80%] px-4 py-2 rounded-lg ${
+                                    message.sender === "user"
+                                        ? "bg-appBlue text-white rounded-br-none"
+                                        : "bg-gray-light dark:bg-gray-dark text-text-primary-light dark:text-text-primary-dark rounded-bl-none"
+                                }`}
+                            >
+                                {message.text}
+                            </div>
+                        </div>
+                    ))}
+                    {isTyping && (
+                        <div className="flex justify-start">
+                            <div className="bg-gray-light dark:bg-gray-dark text-text-primary-light dark:text-text-primary-dark rounded-lg rounded-bl-none px-4 py-2">
+                                <div className="flex space-x-2">
+                                    <div className="w-2 h-2 bg-text-secondary-light dark:bg-text-secondary-dark rounded-full animate-bounce"></div>
+                                    <div className="w-2 h-2 bg-text-secondary-light dark:bg-text-secondary-dark rounded-full animate-bounce delay-100"></div>
+                                    <div className="w-2 h-2 bg-text-secondary-light dark:bg-text-secondary-dark rounded-full animate-bounce delay-200"></div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    <div ref={chatEndRef} />
+                </div>
+
+                {/* Input Container */}
+                <div className="border-t border-text-light-light dark:border-text-light-dark p-4 bg-gray-light dark:bg-gray-dark">
+                    <div className="flex space-x-4">
+                        <input
+                            type="text"
+                            className="flex-1 bg-secondary-light dark:bg-secondary-dark border border-text-light-light dark:border-text-light-dark rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-appBlue focus:border-transparent text-text-primary-light dark:text-text-primary-dark placeholder-text-secondary-light dark:placeholder-text-secondary-dark"
+                            value={inputText}
+                            onChange={(e) => setInputText(e.target.value)}
+                            onKeyPress={(e) => {
+                                if (e.key === "Enter") sendMessage();
+                            }}
+                            placeholder="Type your message..."
+                        />
+                        <button
+                            onClick={sendMessage}
+                            className="bg-appBlue text-white rounded-lg px-4 py-2 hover:bg-appBlue/80 transition-colors duration-200 flex items-center space-x-2"
+                        >
+                            <span>Send</span>
+                            <BiSend size={18} />
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     );
-}
+};
+
+export default ChatPage;

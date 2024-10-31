@@ -6,7 +6,7 @@ import {
     AiOutlineClose,
 } from "react-icons/ai";
 
-import { Conversation, FilePreview, UserInput } from "../../globalTypes";
+import { FilePreview, UserInput } from "../../globalTypes";
 import FileIcon from "../FileIcon";
 import { MdOutlineAttachFile } from "react-icons/md";
 
@@ -14,7 +14,7 @@ export default function ChatInputWindow({
     onSend,
     disabled,
 }: {
-    onSend: (data: UserInput) => Promise<Conversation>;
+    onSend: (data: UserInput) => Promise<void>;
     disabled: boolean;
 }) {
     const [input, setInput] = useState("");
@@ -37,28 +37,20 @@ export default function ChatInputWindow({
     });
 
     const handleSend = async () => {
-        if (input.trim() || files.length > 0) {
+        if (input.trim()) {
             const data = {
-                files,
                 prompt: input,
                 creationDateTime: new Date().toISOString(),
             };
+            await onSend(data);
+            setInput("");
+        }
+    };
 
-            setSending(true);
-            try {
-                await onSend(data);
-                setInput("");
-                setFiles([]);
-                // Reset textarea height
-                const textarea = document.querySelector("textarea");
-                if (textarea) {
-                    textarea.style.height = "46px";
-                }
-            } catch (error) {
-                console.error("Failed to send message:", error);
-            } finally {
-                setSending(false);
-            }
+    const handleKeyPress = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
         }
     };
 
@@ -70,13 +62,6 @@ export default function ChatInputWindow({
         if (bytes < 1024) return bytes + " B";
         if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
         return (bytes / 1048576).toFixed(1) + " MB";
-    };
-
-    const handleKeyPress = (e: React.KeyboardEvent) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            handleSend();
-        }
     };
 
     return (
